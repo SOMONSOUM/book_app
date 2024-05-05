@@ -14,16 +14,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+import { createBook } from '@/apis/books';
 
 const FormSchema = z.object({
   title: z.string().min(2, {
     message: 'Title must be at least 2 characters.',
   }),
-  year: z.number().min(4, {
+  year: z.string().min(4, {
     message: 'Year must be at least 4 digits.',
   }),
-  price: z.number().min(1, {
+  price: z.string().min(1, {
     message: 'Price must be at least 1 digits.',
   }),
   date_released: z.string().min(2, {
@@ -39,14 +41,25 @@ export function BookCreateForm() {
     resolver: zodResolver(FormSchema),
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-          <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['create-book'],
+    mutationFn: createBook,
+  });
+
+  function onSubmit(input: z.infer<typeof FormSchema>) {
+    const values = {
+      date_released: input.date_released,
+      description: input.description,
+      price: Number(input.price),
+      year: Number(input.year),
+      title: input.title,
+    };
+
+    mutate(values, {
+      onError: (e) => toast(e.message, { closeButton: true }),
+      onSuccess: (data) => {
+        toast.success('You submitted the following values:', { closeButton: true });
+      },
     });
   }
 
@@ -73,7 +86,7 @@ export function BookCreateForm() {
             <FormItem>
               <FormLabel>Price</FormLabel>
               <FormControl>
-                <Input placeholder='Enter price' {...field} type='number' />
+                <Input placeholder='Enter price' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,7 +99,7 @@ export function BookCreateForm() {
             <FormItem>
               <FormLabel>Year</FormLabel>
               <FormControl>
-                <Input placeholder='Enter year' {...field} type='number' />
+                <Input placeholder='Enter year' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +131,9 @@ export function BookCreateForm() {
             </FormItem>
           )}
         />
-        <Button type='submit'>Submit</Button>
+        <Button disabled={isPending ? true : false} type='submit'>
+          Submit
+        </Button>
       </form>
     </Form>
   );
