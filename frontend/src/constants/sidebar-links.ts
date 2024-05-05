@@ -1,11 +1,11 @@
 import {
   ComponentIcon,
   LayoutDashboardIcon,
-  PieChartIcon,
   UsersIcon,
   LockIcon,
   CircleXIcon,
   SettingsIcon,
+  BookIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -24,9 +24,9 @@ export type SidebarLinkItem = NavLink & {
 export type SidebarLink =
   | SidebarLinkItem
   | {
-      type: 'divider';
-      title: TranslationKey;
-    };
+    type: 'divider';
+    title: TranslationKey;
+  };
 
 export const sidebarLinks: SidebarLink[] = [
   {
@@ -43,9 +43,9 @@ export const sidebarLinks: SidebarLink[] = [
     title: 'widgets',
   },
   {
-    title: 'charts',
-    icon: PieChartIcon,
-    href: '/charts',
+    title: 'books',
+    icon: BookIcon,
+    href: '/books',
   },
   {
     title: 'customers',

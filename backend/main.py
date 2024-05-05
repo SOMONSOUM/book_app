@@ -4,9 +4,19 @@ import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from schema import BookCreate, Book, BookUpdate
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create a FastAPI app
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 # Dependency to get a database session
 def get_db():
