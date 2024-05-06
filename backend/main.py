@@ -77,4 +77,4 @@ async def delete_book(book_id: int, db: db_dependency):
     
     db.delete(db_book)
     db.commit()
-    return
+    return 

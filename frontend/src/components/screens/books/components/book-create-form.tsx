@@ -2,12 +2,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,53 +15,54 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createBook } from '@/apis/books';
-
-const FormSchema = z.object({
-  title: z.string().min(2, {
-    message: 'Title must be at least 2 characters.',
-  }),
-  year: z.string().min(4, {
-    message: 'Year must be at least 4 digits.',
-  }),
-  price: z.string().min(1, {
-    message: 'Price must be at least 1 digits.',
-  }),
-  date_released: z.string().min(2, {
-    message: 'Date released must be at least 2 characters.',
-  }),
-  description: z.string().min(2, {
-    message: 'Description must be at least 2 characters.',
-  }),
-});
+import { Textarea } from '@/components/ui/textarea';
+import { BookInput, BookSchema } from '@/schema/book-schema';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/utils/cn';
 
 export function BookCreateForm() {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<BookInput>({
+    resolver: zodResolver(BookSchema),
   });
+
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationKey: ['create-book'],
     mutationFn: createBook,
   });
 
-  function onSubmit(input: z.infer<typeof FormSchema>) {
+  const onSubmit = (input: BookInput) => {
     const values = {
       date_released: input.date_released,
       description: input.description,
-      price: Number(input.price),
-      year: Number(input.year),
+      price: input.price,
+      year: input.year,
       title: input.title,
     };
 
     mutate(values, {
-      onError: (e) => toast(e.message, { closeButton: true }),
-      onSuccess: (data) => {
-        toast.success('You submitted the following values:', { closeButton: true });
+      onError: (err) => toast(err.message),
+      onSuccess: async () => {
+        toast.success('Book has been created!');
+        await queryClient.invalidateQueries({
+          queryKey: ['books'],
+        });
+        form.reset({
+          title: '',
+          date_released: new Date(),
+          description: '',
+          year: '',
+          price: '',
+        });
       },
     });
-  }
+  };
 
   return (
     <Form {...form}>
@@ -109,11 +110,32 @@ export function BookCreateForm() {
           control={form.control}
           name='date_released'
           render={({ field }) => (
-            <FormItem>
+            <FormItem className='flex flex-col'>
               <FormLabel>Date released</FormLabel>
-              <FormControl>
-                <Input placeholder='Enter date released' {...field} />
-              </FormControl>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={'outline'}
+                      className={cn(
+                        'pl-3 text-left font-normal',
+                        !field.value && 'text-muted-foreground'
+                      )}>
+                      {field.value ? format(field.value, 'PPP') : <span>Pick date released</span>}
+                      <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0' align='start'>
+                  <Calendar
+                    mode='single'
+                    selected={field.value || undefined}
+                    onDayClick={field.onChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormDescription>Date reseased book</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -125,7 +147,7 @@ export function BookCreateForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder='Enter description' {...field} />
+                <Textarea placeholder='Enter description' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

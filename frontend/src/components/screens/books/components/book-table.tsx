@@ -34,8 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Book } from '@/apis/books';
+import { Book, deleteBook } from '@/apis/books';
 import { usePathname, useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
 
 export const columns: ColumnDef<Book>[] = [
   {
@@ -114,6 +115,7 @@ export const columns: ColumnDef<Book>[] = [
       const book = row.original;
       const router = useRouter();
       const pathname = usePathname();
+      const deleteBookMutation = useMutation(deleteBook);
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
