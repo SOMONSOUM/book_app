@@ -34,9 +34,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Book, deleteBook } from '@/apis/books';
+import { deleteBook } from '@/apis/books';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { BookUpdateForm } from './book-update-form';
+import { Modal } from '@/components/ui/modal';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Book } from '@/schema/book-schema';
 
 export const columns: ColumnDef<Book>[] = [
   {
@@ -72,12 +77,12 @@ export const columns: ColumnDef<Book>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className='ml-4 lowercase'>{row.getValue('id')}</div>,
+    cell: ({ row }) => <div className='ml-4'>{row.getValue('id')}</div>,
   },
   {
     accessorKey: 'title',
     header: () => <div>Title</div>,
-    cell: ({ row }) => <div className='lowercase'>{row.getValue('title')}</div>,
+    cell: ({ row }) => <div>{row.getValue('title')}</div>,
   },
   {
     accessorKey: 'date_released',
@@ -115,9 +120,43 @@ export const columns: ColumnDef<Book>[] = [
       const book = row.original;
       const router = useRouter();
       const pathname = usePathname();
-      const deleteBookMutation = useMutation(deleteBook);
+      const [isOpen, setIsOpen] = React.useState(false);
+      const onClose = () => setIsOpen(false);
+      const { mutate } = useMutation({
+        mutationFn: deleteBook,
+        mutationKey: ['remove-book'],
+      });
+
+      const queryClient = useQueryClient();
+
+      const handleRemove = () => {
+        mutate(book.id, {
+          onSuccess: async () => {
+            toast.success('Book has been removed');
+            await queryClient.invalidateQueries({
+              queryKey: ['books'],
+            });
+          },
+          onError: (err) => {
+            toast.error(err.message);
+          },
+        });
+      };
+
       return (
         <DropdownMenu>
+          <Modal isOpen={isOpen} onClose={onClose} className={'!bg-background !px-1'}>
+            <ScrollArea className='h-[60dvh] px-6'>
+              <BookUpdateForm
+                bookId={book.id}
+                date_released={book.date_released}
+                description={book.description}
+                price={book.price}
+                title={book.title}
+                year={book.year}
+              />
+            </ScrollArea>
+          </Modal>
           <DropdownMenuTrigger asChild>
             <Button variant='ghost' className='h-8 w-8 p-0'>
               <span className='sr-only'>Open menu</span>
@@ -131,8 +170,12 @@ export const columns: ColumnDef<Book>[] = [
               onClick={() => router.push(`${pathname}/${book?.id}`)}>
               View
             </DropdownMenuItem>
-            <DropdownMenuItem className='cursor-pointer'>Update</DropdownMenuItem>
-            <DropdownMenuItem className='cursor-pointer'>Remove</DropdownMenuItem>
+            <DropdownMenuItem className='cursor-pointer' onClick={() => setIsOpen(true)}>
+              Update
+            </DropdownMenuItem>
+            <DropdownMenuItem className='cursor-pointer' onClick={handleRemove}>
+              Remove
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

@@ -2,14 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { ScrollArea } from '../ui/scroll-area';
+import { ScrollArea } from '../../../ui/scroll-area';
 
-type TPopupModalProps = {
+type TCreateBookModalProps = {
   onConfirm?: () => void;
   loading?: boolean;
   renderModal: (onClose: () => void) => React.ReactNode;
 };
-export default function PopupModal({ renderModal }: TPopupModalProps) {
+export default function CreateBookModal({ renderModal }: TCreateBookModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
   return (

@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -16,29 +15,54 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createBook } from '@/apis/books';
+import { updateBook } from '@/apis/books';
 import { Textarea } from '@/components/ui/textarea';
-import { BookInput, BookInputSchema } from '@/schema/book-schema';
+import { BookInput, BookInputSchema, BookSchema } from '@/schema/book-schema';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/utils/cn';
+import React from 'react';
 
-export function BookCreateForm() {
+type TBookUpdateForm = {
+  bookId: number;
+  date_released: Date;
+  description: string;
+  price: string;
+  title: string;
+  year: string;
+};
+
+export const BookUpdateForm: React.FC<TBookUpdateForm> = ({
+  bookId,
+  date_released,
+  description,
+  price,
+  title,
+  year,
+}) => {
   const form = useForm<BookInput>({
     resolver: zodResolver(BookInputSchema),
+    defaultValues: {
+      date_released: new Date(date_released),
+      description,
+      price: price.toString(),
+      title,
+      year: year.toString(),
+    },
   });
 
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationKey: ['create-book'],
-    mutationFn: createBook,
+    mutationFn: updateBook,
+    mutationKey: ['update-book'],
   });
 
   const onSubmit = (input: BookInput) => {
     const values = {
+      id: bookId,
       date_released: input.date_released,
       description: input.description,
       price: input.price,
@@ -49,16 +73,9 @@ export function BookCreateForm() {
     mutate(values, {
       onError: (err) => toast(err.message),
       onSuccess: async () => {
-        toast.success('Book has been created!');
+        toast.success('Book has been updated!');
         await queryClient.invalidateQueries({
           queryKey: ['books'],
-        });
-        form.reset({
-          title: '',
-          date_released: new Date(),
-          description: '',
-          year: '',
-          price: '',
         });
       },
     });
@@ -161,4 +178,4 @@ export function BookCreateForm() {
       </form>
     </Form>
   );
-}
+};

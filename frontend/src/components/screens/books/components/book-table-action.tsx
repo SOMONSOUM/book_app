@@ -1,5 +1,4 @@
-import PopupModal from '@/components/common/popup-modal';
-import { Button } from '@/components/ui/button';
+import PopupModal from '@/components/screens/books/components/create-book-modal';
 import { BookCreateForm } from './book-create-form';
 
 export default function BookTableActions() {
